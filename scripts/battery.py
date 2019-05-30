@@ -7,9 +7,9 @@ import os
 os.chdir(os.path.dirname(os.path.realpath(__file__)))
 
 with open("../ros_ws/src/crazyswarm/launch/crazyflies.yaml", 'r') as ymlfile:
-    cfg = yaml.load(ymlfile)
+    cfg = yaml.load(ymlfile, Loader=yaml.SafeLoader)
 with open("../ros_ws/src/crazyswarm/launch/crazyflieTypes.yaml", 'r') as ymlfile:
-    cfTypes = yaml.load(ymlfile)
+    cfTypes = yaml.load(ymlfile, Loader=yaml.SafeLoader)
     cfTypes = cfTypes["crazyflieTypes"]
 
 for crazyflie in cfg["crazyflies"]:
