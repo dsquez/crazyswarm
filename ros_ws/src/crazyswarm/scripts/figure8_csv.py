@@ -31,6 +31,6 @@ if __name__ == "__main__":
         #allcfs.startTrajectory(0, timescale=TIMESCALE, reverse=True)
         #timeHelper.sleep(traj1.duration * TIMESCALE + 2.0)
 
-        allcfs.land(targetHeight=0.06, duration=4.0)
+        allcfs.land(targetHeight=0.02, duration=4.0)
         timeHelper.sleep(5.0)
 
