@@ -93,24 +93,24 @@ if __name__ == '__main__':
 
 
 	## EXECUTE TAKEOFF TO HOVER HEIGHT.
-	allcfs.takeoff(targetHeight=height, duration=4.0)
-	timeHelper.sleep(4.5)
+	allcfs.takeoff(targetHeight=height, duration=6.0)
+	timeHelper.sleep(6.5)
 
 	for cf in allcfs.crazyflies:
-		pos = np.array([0,0,height])
-		cf.goTo(pos, 0, 2.0)
-		timeHelper.sleep(2.5)
+		pos = np.array([-1.0,0,height])
+		cf.goTo(pos, 0, 3.0)
+		timeHelper.sleep(3.5)
 
 	for cf in allcfs.crazyflies:
 		posdes = cf.position()		# STORE CURRENT POSITION FOR REFERENCE.
 
 	delta = 0.05					# DISTANCE TO ACCOUNT FOR NOISE IN POSITION.
 
-	k = 1							# SCALAR MULTIPLIER TO MODIFY INITIAL
+	k = 50							# SCALAR MULTIPLIER TO MODIFY INITIAL
 									# VELOCITY IN ODE SOLVER.
 
 
-
+	print 'Ready for slingshot'
 	while not rospy.is_shutdown():
 		# IF THE DISTANCE BETWEEN THE DRONE'S CURRENT POSITION
 		# AND THE REFERENCE POSITION IS GREATER THAN delta.
@@ -129,7 +129,7 @@ if __name__ == '__main__':
 					# USE posdes AS INITIAL POSITION IN SOLVER
 					# BECAUSE DRONE WILL RETURN TO THAT POSITION
 					# BEFORE BEGINNING TRAJECTORY.
-					traj = calctraj(posdes,np.array([2,0,3]))
+					traj = calctraj(posdes,velinit)
 
 				#print "traj:",traj
 				
@@ -140,13 +140,13 @@ if __name__ == '__main__':
 					print 'exiting slingshot mode'
 					break
 
-			timeHelper.sleep(2.0)
+			#timeHelper.sleep(2.0)
 			count = 0	# BEGIN A COUNTER FOR USE IN PLOTTING TRAJECTORY.
 
 
 			# EXECUTE TRAJECTORY.
 			for waypoint in range(len(traj[:,0])):
-				if traj[waypoint,2] >= height / 5:
+				if traj[waypoint,2] >= 0.05:
 					count += 1
 					
 					#droneob.sp = traj[waypoint,:] + [0,0,0]
@@ -158,7 +158,11 @@ if __name__ == '__main__':
 					#rate.sleep()
 				else:
 					break
+
+
 			trajexp = traj[0:count,:]
+			trajexp[-1,2] = 0.1
+			print 'Last waypoint:', trajexp[-1,:]
 			print 'exporting csv'
 			np.savetxt("trajexp.csv", trajexp, delimiter=",")
 
@@ -170,11 +174,19 @@ if __name__ == '__main__':
 			for cf in allcfs.crazyflies:
 				cf.uploadTrajectory(0, 0, trajbal)
 
+			print 'Beginning trajectory'
+
+			TIMESCALE = 1.0
+
 			for cf in allcfs.crazyflies:
-				cf.startTrajectory(0, timescale=1)
-			timeHelper.sleep(trajbal.duration + 1.0)
+				cf.startTrajectory(0, timescale=TIMESCALE)
+
+			timeHelper.sleep(trajbal.duration*TIMESCALE + 0.25)
+
 			allcfs.land(targetHeight=0.02, duration=4.0)
+
 			timeHelper.sleep(5.0)
+
 			#time.sleep(3.0)
 			# BUILD TIME VECTOR FOR PLOTTING
 			#tspan = np.linspace(0,4,num=500)

@@ -14,7 +14,7 @@ if __name__ == "__main__":
     traj1.loadcsv("figure8.csv")
 
     TRIALS = 1
-    TIMESCALE = 2.0
+    TIMESCALE = 0.7
     for i in range(TRIALS):
         for cf in allcfs.crazyflies:
             cf.uploadTrajectory(0, 0, traj1)
