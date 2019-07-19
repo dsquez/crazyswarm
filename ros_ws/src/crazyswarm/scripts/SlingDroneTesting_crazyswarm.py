@@ -87,26 +87,29 @@ if __name__ == '__main__':
 	print "program started"
 
 	trajbal = uav_trajectory.Trajectory()
-	height = 1.5			# DESIRED HOVER HEIGHT
+	height = 1.50			# DESIRED HOVER HEIGHT
 	waittime = 0.75			# DURATION OF EACH goTo COMMAND. OBSOLETE 12 JUL 19 
 	#rate = rospy.Rate(35)	# RATE OF LOOP ITERATIONS IN HZ.
 
-
+	timeHelper.sleep(5.0)
 	## EXECUTE TAKEOFF TO HOVER HEIGHT.
 	allcfs.takeoff(targetHeight=height, duration=6.0)
 	timeHelper.sleep(6.5)
 
 	for cf in allcfs.crazyflies:
-		pos = np.array([-1.0,0,height])
+		pos = np.array([0,0,height])
 		cf.goTo(pos, 0, 3.0)
-		timeHelper.sleep(3.5)
+		timeHelper.sleep(4.0)
 
 	for cf in allcfs.crazyflies:
 		posdes = cf.position()		# STORE CURRENT POSITION FOR REFERENCE.
 
-	delta = 0.05					# DISTANCE TO ACCOUNT FOR NOISE IN POSITION.
+	delta = 0.03					# DISTANCE TO ACCOUNT FOR NOISE IN POSITION.
 
-	k = 50							# SCALAR MULTIPLIER TO MODIFY INITIAL
+
+	k = 100
+
+								# SCALAR MULTIPLIER TO MODIFY INITIAL
 									# VELOCITY IN ODE SOLVER.
 
 
@@ -117,6 +120,7 @@ if __name__ == '__main__':
 		if np.linalg.norm(posdes - allcfs.crazyflies[0].position()) > delta:
 			print "Slingshot mode"
 			displace = posdes - allcfs.crazyflies[0].position()	# GET 3D VECTOR OF THE DISPLACEMENT.
+			displace = np.array([0.015,0.015,0.01])
 			velinit = k * displace 					# SCALE DISPLACEMENT TO GET
 													# INITIAL VELOCITY.
 			traj = 0								# INITIALIZE TRAJECTORY VARIABLE.
@@ -130,6 +134,7 @@ if __name__ == '__main__':
 					# BECAUSE DRONE WILL RETURN TO THAT POSITION
 					# BEFORE BEGINNING TRAJECTORY.
 					traj = calctraj(posdes,velinit)
+					print 'traj calculated'
 
 				#print "traj:",traj
 				
@@ -161,7 +166,20 @@ if __name__ == '__main__':
 
 
 			trajexp = traj[0:count,:]
-			trajexp[-1,2] = 0.1
+			x2 = trajexp[-1,0] 
+			x1 = trajexp[-2,0]
+			y2 = trajexp[-1,1] 
+			y1 = trajexp[-2,1]
+			z3 = 0.1
+			z2 = trajexp[-1,2] 
+			z1 = trajexp[-2,2]
+
+			x3 = (x2 - x1)*(z3 - z2)/(z2 - z1) + x2
+			y3 = (y2 - y1)*(z3 - z2)/(z2 - z1) + y2
+			addmat = np.array([x3,y3,z3])
+			trajexp = np.vstack([trajexp,addmat])
+
+			#trajexp[-1,2] = 0.1
 			print 'Last waypoint:', trajexp[-1,:]
 			print 'exporting csv'
 			np.savetxt("trajexp.csv", trajexp, delimiter=",")
@@ -183,15 +201,59 @@ if __name__ == '__main__':
 
 			timeHelper.sleep(trajbal.duration*TIMESCALE + 0.25)
 
-			allcfs.land(targetHeight=0.02, duration=4.0)
+			pos = allcfs.crazyflies[0].position()
+			if pos[2] > 0.17 or pos[2] < 0.14:
+				for cf in allcfs.crazyflies:
+					pos[2] = 0.14
+					cf.goTo(pos, 0, 2.0)
+					timeHelper.sleep(2.2)
+			
+			for cf in allcfs.crazyflies:
+				posi = pos + np.array([0.15,0,0])
+				cf.goTo(posi, 0, 1.2)
+				timeHelper.sleep(1.2)
 
-			timeHelper.sleep(5.0)
+			for cf in allcfs.crazyflies:
+				posi = pos + np.array([0,0.15,0])
+				cf.goTo(posi, 0, 1.2)
+				timeHelper.sleep(1.2)
+
+			for cf in allcfs.crazyflies:
+				posi = pos + np.array([-0.15,0,0])
+				cf.goTo(posi, 0, 1.2)
+				timeHelper.sleep(1.2)
+
+			for cf in allcfs.crazyflies:
+				posi = pos + np.array([0,-0.15,0])
+				cf.goTo(posi, 0, 1.2)
+				timeHelper.sleep(1.2)
+
+			for cf in allcfs.crazyflies:
+				posi = pos
+				cf.goTo(posi, 0, 1.0)
+				timeHelper.sleep(1.2)
+
+
+			for cf in allcfs.crazyflies:
+				posi = np.array([0,0,1.5])
+				cf.goTo(posi, 0, 8.0)
+				timeHelper.sleep(15.0)
+
+			'''if allcfs.crazyflies[0].position()[2] > 0.1:
+				print 'not at 10 cm'
+				pos = np.array([allcfs.crazyflies[0].position()[0],allcfs.crazyflies[0].position()[1],0.1])
+				allcfs.goTo(pos,0,1.0)
+				timeHelper.sleep(2.0)'''
+
+			allcfs.land(targetHeight=0.02, duration=6.0)
+
+			timeHelper.sleep(7.0)
 
 			#time.sleep(3.0)
 			# BUILD TIME VECTOR FOR PLOTTING
 			#tspan = np.linspace(0,4,num=500)
 			# PREPARE PLOT
-			#ax.plot(traj[0:count,0], traj[0:count,1], traj[0:count,2])
+			ax.plot(traj[0:count,0], traj[0:count,1], traj[0:count,2])
 			# EXECUTE LANDING
 			rospy.signal_shutdown('landed')
 			#print 'reached the floor, shutdown'   	
@@ -201,7 +263,7 @@ if __name__ == '__main__':
 
   	# SHOW PLOT. DO NOT DO THIS WHILE THE DRONE IS FLYING.
   	# IT WILL PAUSE THE PROGRAM.
-  	#plt.show()
+  	plt.show()
 
 
 

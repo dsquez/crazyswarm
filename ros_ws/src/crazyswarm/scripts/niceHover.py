@@ -3,8 +3,8 @@
 import numpy as np
 from pycrazyswarm import *
 
-Z = 0.5
-tspan = 2.0
+Z = 1.5
+tspan = 4.0
 
 if __name__ == "__main__":
     swarm = Crazyswarm()
@@ -13,6 +13,10 @@ if __name__ == "__main__":
 
     allcfs.takeoff(targetHeight=Z, duration=tspan)
     timeHelper.sleep(tspan+.5)
+    for cf in allcfs.crazyflies:
+        pos = np.array([0,0,Z])
+        cf.goTo(pos, 0, 3.0)
+        timeHelper.sleep(3.5)
     '''for cf in allcfs.crazyflies:
         pos = np.array(cf.initialPosition) + np.array([0, 0, Z])
         cf.goTo(pos, 0, 1.0)'''
