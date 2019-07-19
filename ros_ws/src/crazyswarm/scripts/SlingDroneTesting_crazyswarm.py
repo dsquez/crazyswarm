@@ -253,7 +253,7 @@ if __name__ == '__main__':
 			# BUILD TIME VECTOR FOR PLOTTING
 			#tspan = np.linspace(0,4,num=500)
 			# PREPARE PLOT
-			ax.plot(traj[0:count,0], traj[0:count,1], traj[0:count,2])
+			ax.plot(trajexp[0:count,0], trajexp[0:count,1], trajexp[0:count,2])
 			# EXECUTE LANDING
 			rospy.signal_shutdown('landed')
 			#print 'reached the floor, shutdown'   	
